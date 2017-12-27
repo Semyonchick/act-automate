@@ -5,8 +5,11 @@
 const path = require('path')
 
 module.exports = {
+  helpers: {
+    lowercase: str => str.toLowerCase(),
+    localedate: str => (new Date(str)).toLocaleDateString()
+  },
   dev: {
-
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
