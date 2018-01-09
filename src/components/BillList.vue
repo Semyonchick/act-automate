@@ -57,6 +57,8 @@
 </template>
 
 <script>
+  import BX from '../services/BXService'
+
   export default {
     name: 'BillList',
     data () {
@@ -70,34 +72,22 @@
     },
     methods: {
       getBills: function () {
-        let data = []
         let filter = {}
-        // eslint-disable-next-line
-        BX24.callMethod('crm.invoice.list', {filter: filter}, request => {
-          if (request.error()) {
-            alert(request.error())
-          } else {
-            data = data.concat(request.answer.result)
-            if (request.answer.next) request.next()
-            else this.updateData(data)
-            console.log(data)
-          }
+        BX.get('crm.invoice.list', {filter: filter}).then(data => {
+          this.updateData(data)
         })
       },
       updateData (data) {
         this.bills = data
 
         let contacts = [...new Set(data.filter(value => value.UF_CONTACT_ID).map(value => value.UF_CONTACT_ID))].filter(id => !this.contacts[id])
-        // eslint-disable-next-line
-        BX24.callMethod('crm.contact.list', {filter: {ID: contacts}, select: ['ID', 'NAME', 'LAST_NAME']}, request => {
-          request.answer.result.forEach(row => { this.contacts[row.ID] = [row.LAST_NAME, row.NAME].join(' ').trim() })
-          if (request.answer.next) request.next()
+        BX.get('crm.contact.list', {filter: {ID: contacts}, select: ['ID', 'NAME', 'LAST_NAME']}).then(data => {
+          data.forEach(row => { this.contacts[row.ID] = [row.LAST_NAME, row.NAME].join(' ').trim() })
         })
+
         let companies = [...new Set(data.filter(value => value.UF_COMPANY_ID).map(value => value.UF_COMPANY_ID).concat(data.map(value => value.UF_MYCOMPANY_ID)))].filter(id => !this.companies[id])
-        // eslint-disable-next-line
-        BX24.callMethod('crm.company.list', {filter: {ID: companies}, select: ['ID', 'TITLE']}, request => {
-          request.answer.result.forEach(row => { this.companies[row.ID] = row.TITLE })
-          if (request.answer.next) request.next()
+        BX.get('crm.company.list', {filter: {ID: companies}, select: ['ID', 'TITLE']}).then(data => {
+          data.forEach(row => { this.companies[row.ID] = row.TITLE })
         })
       }
     },
@@ -105,10 +95,8 @@
     created: function () {
       this.getBills()
 
-      // eslint-disable-next-line
-      BX24.callMethod('crm.invoice.status.list', {select: ['STATUS_ID', 'NAME']}, request => {
-        request.answer.result.forEach(row => { this.statuses[row.STATUS_ID] = row.NAME })
-        if (request.answer.next) request.next()
+      BX.get('crm.invoice.status.list', {select: ['STATUS_ID', 'NAME']}).then(data => {
+        data.forEach(row => { this.statuses[row.STATUS_ID] = row.NAME })
       })
     }
   }

@@ -3,6 +3,7 @@
     <h1>{{ msg }}</h1>
     <ul>
       <li><a href="/#/bills">Счета</a></li>
+      <li><a href="/#/tasks">Задачи</a></li>
     </ul>
   </div>
 </template>
