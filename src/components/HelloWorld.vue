@@ -2,6 +2,7 @@
   <div class="hello">
     <h1>{{ msg }}</h1>
     <ul>
+      <li><a href="/#/acts">Акты</a></li>
       <li><a href="/#/bills">Счета</a></li>
       <li><a href="/#/tasks">Задачи</a></li>
     </ul>

@@ -12,7 +12,7 @@
 
                     <select name="" id="" v-model="filter.STATUS" size="1">
                         <option value=""></option>
-                        <option value="">123</option>
+                        <option v-for="(status, key) in statuses" :value="key">{{status}}</option>
                     </select>
 
                 </div>
@@ -81,14 +81,28 @@
         this.bills = data
 
         let contacts = [...new Set(data.filter(value => value.UF_CONTACT_ID).map(value => value.UF_CONTACT_ID))].filter(id => !this.contacts[id])
-        BX.get('crm.contact.list', {filter: {ID: contacts}, select: ['ID', 'NAME', 'LAST_NAME']}).then(data => {
-          data.forEach(row => { this.contacts[row.ID] = [row.LAST_NAME, row.NAME].join(' ').trim() })
-        })
+        if (contacts.length) {
+          BX.get('crm.contact.list', {
+            filter: {ID: contacts},
+            select: ['ID', 'NAME', 'LAST_NAME']
+          }).then(data => {
+            data.forEach(row => { this.contacts[row.ID] = [row.LAST_NAME, row.NAME].join(' ').trim() })
+            this.$forceUpdate()
+          })
+        }
 
         let companies = [...new Set(data.filter(value => value.UF_COMPANY_ID).map(value => value.UF_COMPANY_ID).concat(data.map(value => value.UF_MYCOMPANY_ID)))].filter(id => !this.companies[id])
-        BX.get('crm.company.list', {filter: {ID: companies}, select: ['ID', 'TITLE']}).then(data => {
-          data.forEach(row => { this.companies[row.ID] = row.TITLE })
-        })
+        if (companies.length) {
+          BX.get('crm.company.list', {
+            filter: {ID: companies},
+//            select: ['ID', 'TITLE']
+          }).then(data => {
+            data.forEach(row => {
+              this.companies[row.ID] = row.TITLE
+            })
+            this.$forceUpdate()
+          })
+        }
       }
     },
     computed: {},
@@ -97,6 +111,7 @@
 
       BX.get('crm.invoice.status.list', {select: ['STATUS_ID', 'NAME']}).then(data => {
         data.forEach(row => { this.statuses[row.STATUS_ID] = row.NAME })
+        this.$forceUpdate()
       })
     }
   }

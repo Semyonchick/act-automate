@@ -2,6 +2,8 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import HelloWorld from '@/components/HelloWorld'
 import BillList from '@/components/BillList'
+import ActList from '@/components/ActList'
+import ActEdit from '@/components/ActEdit'
 import TaskLog from '@/components/TaskLog'
 
 Vue.use(Router)
@@ -12,6 +14,16 @@ export default new Router({
       path: '/',
       name: 'HelloWorld',
       component: HelloWorld
+    },
+    {
+      path: '/acts',
+      name: 'ActList',
+      component: ActList
+    },
+    {
+      path: '/act',
+      name: 'ActEdit',
+      component: ActEdit
     },
     {
       path: '/bills',
