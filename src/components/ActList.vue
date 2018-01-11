@@ -1,5 +1,5 @@
 <template>
-    <div class="bills">
+    <div class="acts">
         <div class="grid-x">
             <div class="medium-7 cell">
                 <div class="input-group">
@@ -12,31 +12,40 @@
                 </div>
             </div>
 
-            <div class="medium-5 cell">
-                <a href="/#/act" class="button float-right">Добавить акт</a>
+            <div class="medium-5 cell" style="text-align: right">
+                <a href="/#/bills" class="button ">Акты по счетам</a>
+                <a href="/#/act" class="button">Добавить акт</a>
             </div>
         </div>
 
         <table>
             <thead>
             <tr>
+                <th></th>
                 <th>Дата выставления</th>
                 <th>#</th>
                 <th>Сумма</th>
                 <th>Кому</th>
                 <th>От кого</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="row in acts">
+            <tr v-for="row in acts" :class="{selected: select.indexOf(row.ID)+1}" @click="rowClick(row.ID)">
+                <td><label><input type="checkbox" v-model="select" :value="row.ID" @click.prevent></label></td>
                 <td>{{(new Date(row.DATE_ACTIVE_FROM)).toLocaleDateString()}}</td>
                 <td>{{row.NAME}}</td>
-                <td>{{calcTotal(row)}}</td>
+                <td>{{row.PROPERTY_VALUES.price}}</td>
                 <td>
                     <div class="company" v-if="value=companies[row.PROPERTY_VALUES.companyTo]">{{value}}</div>
                 </td>
                 <td>
                     <div class="my-company" v-if="value=companies[row.PROPERTY_VALUES.companyFrom]">{{value}}</div>
+                </td>
+                <td>
+                    <button type="button" @click="printAct(row.ID)">print</button>
+                    <button type="button" @click="editAct(row.ID)">edit</button>
+                    <button type="button" @click="removeAct(row.ID)">delete</button>
                 </td>
             </tr>
             </tbody>
@@ -52,11 +61,32 @@
     data () {
       return {
         acts: [],
+        select: [],
         companies: {},
         filter: {}
       }
     },
     methods: {
+      printAct (id) {
+        alert('Печать https://github.com/MrRio/jsPDF')
+      },
+      editAct (id) {
+        location.href = '/#/act/' + id
+      },
+      removeAct (id) {
+        if (confirm('Вы уверены что хотите удалить этот акт?')) {
+          BX.get('entity.item.delete', {ENTITY: 'actList', ID: id})
+          this.acts = this.acts.filter(row => row.ID !== id)
+        }
+      },
+      rowClick (id) {
+        let exist = this.select.indexOf(id)
+        if (exist + 1) {
+          this.select.splice(exist, 1)
+        } else {
+          this.select.push(id)
+        }
+      },
       calcTotal (row) {
         let total = 0
         try {
@@ -91,21 +121,16 @@
         }
       },
       install () {
-        BX.get('entity.add', {
-          ENTITY: 'actList',
-          NAME: 'Список актов'
-        }).then(_ => {
-          BX.get('entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'bill', NAME: 'Счет', TYPE: 'N'})
-          BX.get('entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'deal', NAME: 'Сделка', TYPE: 'N'})
-          BX.get('entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyTo', NAME: 'Заказчик', TYPE: 'N'})
-          BX.get('entity.item.property.add', {
-            ENTITY: 'actList',
-            PROPERTY: 'companyFrom',
-            NAME: 'Исполнитель',
-            TYPE: 'N'
-          })
-          BX.get('entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'products', NAME: 'Товары', TYPE: 'S'})
-
+        this.remove()
+        BX.batch([
+          ['entity.add', {ENTITY: 'actList', NAME: 'Список актов'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'bill', NAME: 'Счет', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'deal', NAME: 'Сделка', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'price', NAME: 'Сумма', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyTo', NAME: 'Заказчик', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyFrom', NAME: 'Исполнитель', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'products', NAME: 'Товары', TYPE: 'S'}]
+        ]).then(_ => {
           this.getActs()
         })
       },

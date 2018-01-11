@@ -99,7 +99,7 @@
     },
     computed: {
       projects () {
-        return this.git.map(row => Object.values(row.PROPERTY_141)[0]).filter((v, i, a) => a.indexOf(v) === i)
+        return this.git.map(row => row.PROPERTY_141 ? Object.values(row.PROPERTY_141)[0] : row.NAME.split(' ')[0]).filter((v, i, a) => a.indexOf(v) === i)
       },
       users () {
         return this.git.map(row => Object.values(row.PROPERTY_143)[0]).filter((v, i, a) => a.indexOf(v) === i)
@@ -111,7 +111,7 @@
         let git = this.git
 
         if (this.filter.USER) git = git.filter(row => this.filter.USER === Object.values(row.PROPERTY_143)[0])
-        if (this.filter.PROJECT) git = git.filter(row => this.filter.PROJECT === Object.values(row.PROPERTY_141)[0])
+        if (this.filter.PROJECT) git = git.filter(row => this.filter.PROJECT === row.PROPERTY_141 ? Object.values(row.PROPERTY_141)[0] : row.NAME.split(' ')[0])
 
         git.forEach(row => {
           if (row.PREVIEW_TEXT.indexOf('Merge remote-tracking') !== -1) return
@@ -120,9 +120,9 @@
             date: row.DATE_CREATE,
             lastDate: row.DATE_CREATE,
             time: this.readyDate(row.DATE_CREATE),
-            project: Object.values(row.PROPERTY_141)[0],
+            project: row.PROPERTY_141 ? Object.values(row.PROPERTY_141)[0] : row.NAME.split(' ')[0],
             text: row.PREVIEW_TEXT,
-            user: Object.values(row.PROPERTY_143)[0],
+            user: row.PROPERTY_143 ? Object.values(row.PROPERTY_143)[0] : 0,
             duration: 0,
             git: [],
             waka: []
@@ -150,7 +150,7 @@
               data.duration += this.readyDate(data.date) - this.readyDate(row.ACTIVE_FROM)
               addTime = this.readyDate(row.ACTIVE_TO) - data.time
             } else {
-              data.duration += +Object.values(row.PROPERTY_139)[0]
+              data.duration += row.PROPERTY_139 ? +Object.values(row.PROPERTY_139)[0] : 0
             }
           })
           timeAdd[data.user + data.project] = addTime
@@ -159,13 +159,13 @@
             result[resultKey] = data
           }
         })
-        console.log(result, this.waka.filter(row => skip.indexOf(row.ID) === -1).map(row => row.NAME))
+//        console.log(result, this.waka.filter(row => skip.indexOf(row.ID) === -1).map(row => row.NAME))
 
         return result
       }
     },
     created () {
-      this.filter.DATE_FROM = [(new Date()).getFullYear(), (new Date()).getMonth() + 1, '01'].join('-')
+      this.filter.DATE_FROM = [(new Date()).getFullYear(), ('0' + (new Date()).getMonth() + 1).substr(-2), '01'].join('-')
       BX.get('user.get', {}).then(users => {
         users.forEach(row => {
           this.userList[row.ID] = row

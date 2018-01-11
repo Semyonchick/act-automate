@@ -21,6 +21,11 @@ export default new Router({
       component: ActList
     },
     {
+      path: '/act/:id',
+      name: 'ActEdit',
+      component: ActEdit
+    },
+    {
       path: '/act',
       name: 'ActEdit',
       component: ActEdit
