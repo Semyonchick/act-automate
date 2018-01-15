@@ -23,7 +23,7 @@
                 <div class="medium-2 cell"><label for="buy">Покупатель</label></div>
                 <div class="medium-3 cell">
                     <select id="buy" v-model="act.PROPERTY_VALUES.companyTo"
-                            @click="selectCompany('PROPERTY_VALUES.companyTo')">
+                            @click.prevent="selectCompany('companyTo')">
                         <option :value="companyTo.id">{{companyTo.title}}</option>
                     </select>
                 </div>
@@ -146,10 +146,9 @@
         }, data => {
           this.companyTo = data.company[0]
           this.companyTo.id = this.companyTo.id.split('_')[1]
-          this.act[field] = this.companyTo.id
+          this.act.PROPERTY_VALUES[field] = this.companyTo.id
           this.$forceUpdate()
         })
-        return false
       }
     },
     computed: {},

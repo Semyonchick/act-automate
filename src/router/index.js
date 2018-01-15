@@ -5,6 +5,7 @@ import BillList from '@/components/BillList'
 import ActList from '@/components/ActList'
 import ActEdit from '@/components/ActEdit'
 import TaskLog from '@/components/TaskLog'
+import ActPrint from '@/components/ActPrint'
 
 Vue.use(Router)
 
@@ -19,6 +20,11 @@ export default new Router({
       path: '/acts',
       name: 'ActList',
       component: ActList
+    },
+    {
+      path: '/act/print/:id',
+      name: 'ActPrint',
+      component: ActPrint
     },
     {
       path: '/act/:id',

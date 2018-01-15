@@ -43,32 +43,46 @@
                     <div class="my-company" v-if="value=companies[row.PROPERTY_VALUES.companyFrom]">{{value}}</div>
                 </td>
                 <td>
-                    <button type="button" @click="printAct(row.ID)">print</button>
-                    <button type="button" @click="editAct(row.ID)">edit</button>
-                    <button type="button" @click="removeAct(row.ID)">delete</button>
+                    <button type="button" @click.prevent="createPdf(row.ID)">pdf</button>
+                    <button type="button" @click.prevent="editAct(row.ID)">edit</button>
+                    <button type="button" @click.prevent="removeAct(row.ID)">delete</button>
                 </td>
             </tr>
             </tbody>
         </table>
+
+        <act-show v-show="1" ref="act" :id="currentId"></act-show>
     </div>
 </template>
 
 <script>
   import BX from '../services/BXService'
+  import html2pdf from 'html2pdf.js'
+  import ActShow from '@/components/ActShow'
 
   export default {
+    components: {ActShow},
     name: 'ActList',
     data () {
       return {
         acts: [],
         select: [],
         companies: {},
-        filter: {}
+        filter: {},
+        currentId: 0
       }
     },
     methods: {
       printAct (id) {
-        alert('Печать https://github.com/MrRio/jsPDF')
+      },
+      createPdf (id) {
+        this.currentId = id
+        let element = document.getElementById('actDetail')
+        html2pdf(element, {
+          margin: 10,
+          filename: 'act_' + this.currentId + '.pdf',
+          html2canvas: {dpi: 192, letterRendering: true}
+        })
       },
       editAct (id) {
         location.href = '/#/act/' + id
