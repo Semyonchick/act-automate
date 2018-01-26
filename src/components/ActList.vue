@@ -27,6 +27,7 @@
                 <th>Сумма</th>
                 <th>Кому</th>
                 <th>От кого</th>
+                <th>Статус</th>
                 <th></th>
             </tr>
             </thead>
@@ -41,6 +42,9 @@
                 </td>
                 <td>
                     <div class="my-company" v-if="value=companies[row.PROPERTY_VALUES.companyFrom]">{{value}}</div>
+                </td>
+                <td>
+                    <span>{{getStatus(row)}}</span>
                 </td>
                 <td>
                     <button type="button" @click.prevent="createPdf(row.ID)">pdf</button>
@@ -69,10 +73,14 @@
         select: [],
         companies: {},
         filter: {},
-        currentId: 0
+        currentId: 0,
+        statusMap: ['новый', 'отправлен', 'получен']
       }
     },
     methods: {
+      getStatus (row) {
+        return this.statusMap[+row.PROPERTY_VALUES.status || 0]
+      },
       printAct (id) {
       },
       createPdf (id) {
@@ -144,7 +152,8 @@
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'price', NAME: 'Сумма', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyTo', NAME: 'Заказчик', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyFrom', NAME: 'Исполнитель', TYPE: 'N'}],
-          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'products', NAME: 'Товары', TYPE: 'S'}]
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'products', NAME: 'Товары', TYPE: 'S'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'status', NAME: 'Статус', TYPE: 'N'}]
         ]).then(_ => {
           this.getActs()
         })
