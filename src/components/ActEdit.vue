@@ -1,5 +1,5 @@
 <template>
-    <div class="act">
+    <div class="act" v-if="act">
         <h1>Сформировать акт</h1>
 
         <form action="" @submit.prevent="addAct($event)">
@@ -103,7 +103,7 @@
           BX.get('entity.item.add', params).then(_ => {
           })
         }
-        this.act = {}
+        this.act = false
       },
       addProduct () {
         if (!this.act.PROPERTY_VALUES.products) this.act.PROPERTY_VALUES.products = []

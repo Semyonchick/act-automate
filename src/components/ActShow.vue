@@ -1,24 +1,26 @@
 <template>
-    <div v-if="actUpdate && textPrice" id="actDetail">
-        <p style="text-align: center;font-weight: 700;font-size: 16px">АКТ № {{act.NAME}} от 23 мая 2017 г.
+    <div v-if="actUpdate && act && textPrice" id="actDetail">
+        <p style="text-align: center;font-weight: 700">АКТ № {{act.NAME}} от {{getDate(act.DATE_ACTIVE_FROM)}}
             <br>на выполнение
             <nobr>работ-услуг</nobr>
         </p>
+
+        <p v-if="act.PREVIEW_TEXT" v-html="act.PREVIEW_TEXT"></p>
 
         <p>Мы, нижеподписавшиеся, представитель ИСПОЛНИТЕЛЯ,
             с одной стороны и представитель ЗАКАЗЧИКА с другой стороны,
             составили настоящий акт в том, что ИСПОЛНИТЕЛЬ выполнил, а ЗАКАЗЧИК принял следующие работы:</p>
 
-        <table cellpadding="0" cellspacing="0" style="margin: 0 -9px">
+        <table cellpadding="0" cellspacing="0" style="margin: 0 -7px">
             <thead>
             <tr>
                 <th>Наименование</th>
-                <th>Цена</th>
-                <th>
+                <th width="80px">Цена</th>
+                <th width="60px">
                     <nobr>Кол-во</nobr>
                 </th>
-                <th>Ед. изм.</th>
-                <th>Сумма</th>
+                <th width="60px">Ед. изм.</th>
+                <th width="100px">Сумма</th>
             </tr>
             <tr>
                 <td>1</td>
@@ -31,39 +33,40 @@
             <tbody>
             <tr v-for="(row) in act.PROPERTY_VALUES.products">
                 <td>{{row.name}}</td>
-                <td>{{row.price}}</td>
-                <td>{{row.quantity}}</td>
+                <td>{{getPriceFormat(row.price)}}</td>
+                <td>{{parseFloat(row.quantity)}}</td>
                 <td>{{row.unit}}</td>
-                <td>{{row.total}}</td>
+                <td>{{getPriceFormat(row.total)}}</td>
             </tr>
             </tbody>
             <tfoot>
             <tr>
                 <td colspan="4">Итого:</td>
-                <td>{{act.PROPERTY_VALUES.price}}</td>
+                <td>{{getPriceFormat(act.PROPERTY_VALUES.price)}}</td>
             </tr>
             </tfoot>
         </table>
 
-        <p style="margin-top: 5px">Сумма прописью: {{textPrice}} 00 копеек. Без НДС.</p>
+        <div style="margin: 5px 0 15px">Сумма прописью: {{textPrice}} 00 копеек. Без НДС.</div>
 
-        <p>Работы выполнены в полном объеме, в установленные сроки и с надлежащим качеством.
-            Стороны претензий друг к другу не имеют.</p>
+        <div style="margin: 30px 0">Работы выполнены в полном объеме, в установленные сроки и с надлежащим качеством.
+            Стороны претензий друг к другу не имеют.
+        </div>
 
         <table cellpadding="0" cellspacing="0" class="white">
             <tr>
                 <td width="50%" valign="top">
-                    <div>Исполнитель: {{from.RQ_COMPANY_NAME || from.NAME}}</div>
+                    <div>Исполнитель: {{getName(from)}}</div>
                     <div v-for="(name, key) in params" v-if="value=from[key]">{{name}}: {{value}}</div>
                 </td>
                 <td width="50%" valign="top">
-                    <div>Заказчик: {{to.RQ_COMPANY_NAME || to.NAME}}</div>
+                    <div>Заказчик: {{getName(to)}}</div>
                     <div v-for="(name, key) in params" v-if="value=to[key]">{{name}}: {{value}}</div>
                 </td>
             </tr>
             <tr>
-                <td>Сдал</td>
-                <td>Принял</td>
+                <td style="padding-top: 5px">Сдал _____________</td>
+                <td style="padding-top: 5px">Принял _____________</td>
             </tr>
         </table>
     </div>
@@ -92,10 +95,24 @@
       }
     },
     methods: {
+      getDate (text) {
+        let date = new Date(text)
+        return date.toLocaleString('ru', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      },
+      getName (data) {
+        return data.RQ_COMPANY_NAME || [data.PRESET_ID === '4' ? 'ИП' : '', data.RQ_LAST_NAME, data.RQ_FIRST_NAME, data.RQ_SECOND_NAME].filter(value => value).join(' ')
+      },
+      getPriceFormat (price) {
+        return parseFloat(price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1 ').replace('.', ',')
+      },
       getCompanies (ids) {
         return BX.get('crm.requisite.list', {
           filter: {ENTITY_ID: ids, ENTITY_TYPE_ID: 4}
-        }).then(result =>{
+        }).then(result => {
           result.forEach(row => {
             this.requisites[row.ENTITY_ID] = row
           })
@@ -144,8 +161,13 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss" scoped>
     #actDetail {
-        margin: 0 10px;
-        font-size: 14px;
+        margin: 0 10px 0 25px;
+        font-size: 13.5px;
+        line-height: 1.2;
+    }
+
+    p {
+        text-indent: 25px
     }
 
     * {
@@ -157,8 +179,9 @@
         tr {
             background: white;
         }
-        td,th {
-            border: 1px solid black
+        td, th {
+            border: 1px solid black;
+            padding: 2px 5px;
         }
         thead {
             border-left: 1px solid black;
@@ -166,6 +189,7 @@
             tr {
             }
             td, th {
+                padding: 7px;
                 text-align: center;
             }
         }

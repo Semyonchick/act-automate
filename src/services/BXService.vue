@@ -1,22 +1,33 @@
 <script>
   /* eslint-disable */
-
   export default {
+    cache: true,
     domain () {
       return BX24.getAuth().domain
     },
     get (method, params, next) {
+      const cacheId = method + '-' + JSON.stringify([params, next])
+
       return new Promise((resolve, reject) => {
-        let data = []
-        BX24.callMethod(method, params, (request) => {
-          if (request.error()) {
-            reject(request.error())
-          } else {
-            data = data.concat(request.answer.result)
-            if (request.answer.next && (!next || next(data))) request.next()
-            else resolve(data)
-          }
-        })
+        if (this.cache && sessionStorage.getItem(cacheId)) {
+          resolve(JSON.parse(sessionStorage.getItem(cacheId)))
+        } else {
+          let data = []
+          BX24.callMethod(method, params, (request) => {
+            if (request.error()) {
+              reject(request.error())
+            } else {
+              data = data.concat(request.answer.result)
+              if (request.answer.next && (!next || next(data))) request.next()
+              else {
+                if (this.cache && method.match(/\.(get|list)$/)) {
+                  sessionStorage.setItem(cacheId, JSON.stringify(data))
+                }
+                resolve(data)
+              }
+            }
+          })
+        }
       })
     },
     batch (methods) {

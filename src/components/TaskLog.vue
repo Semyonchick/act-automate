@@ -159,6 +159,10 @@
             result[resultKey] = data
           }
         })
+
+        if (this.filter.PROJECT) {
+          result = Object.values(result).filter(row => row.project === this.filter.PROJECT)
+        }
 //        console.log(result, this.waka.filter(row => skip.indexOf(row.ID) === -1).map(row => row.NAME))
 
         return result

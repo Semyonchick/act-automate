@@ -81,7 +81,8 @@
         html2pdf(element, {
           margin: 10,
           filename: 'act_' + this.currentId + '.pdf',
-          html2canvas: {dpi: 192, letterRendering: true}
+          image: {type: 'jpeg', quality: 0.98},
+          html2canvas: {dpi: 384, letterRendering: true}
         })
       },
       editAct (id) {
