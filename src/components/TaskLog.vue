@@ -52,6 +52,17 @@
                 <td>{{row.text}}</td>
             </tr>
             </tbody>
+            <tfoot>
+            <tr v-if="data = Object.values(workHistory)">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td v-if="data.length">{{Math.round(data.map(row => row.duration / 36 / 100).reduce((a,b) => a+b)*10)/10}}</td>
+                <td></td>
+            </tr>
+            </tfoot>
         </table>
     </div>
 </template>
@@ -75,22 +86,12 @@
       },
       getData: function () {
         let date = this.readyDate(this.filter.DATE_FROM)
-
-        BX.get('lists.element.get', {
-          IBLOCK_TYPE_ID: 'lists',
-          IBLOCK_ID: 35,
-          ELEMENT_ORDER: {ACTIVE_FROM: 'DESC'}
-        }, (waka) => {
-          return this.readyDate(waka[waka.length - 1].ACTIVE_FROM) >= date
-        }).then(waka => {
-          this.waka = waka.reverse()
-        })
-
         BX.get('lists.element.get', {
           IBLOCK_TYPE_ID: 'lists',
           IBLOCK_ID: 37,
-          ELEMENT_ORDER: {ACTIVE_FROM: 'DESC'}
+          ELEMENT_ORDER: {ACTIVE_FROM: 'desc'}
         }, (git) => {
+          console.log(git)
           return this.readyDate(git[git.length - 1].DATE_CREATE) >= date
         }).then(git => {
           this.git = git.reverse()
@@ -105,9 +106,9 @@
         return this.git.map(row => Object.values(row.PROPERTY_143)[0]).filter((v, i, a) => a.indexOf(v) === i)
       },
       workHistory () {
+        sessionStorage.setItem('fromDate', this.filter.DATE_FROM)
+
         let result = {}
-        let timeAdd = {}
-        let skip = []
         let git = this.git
 
         if (this.filter.USER) git = git.filter(row => this.filter.USER === Object.values(row.PROPERTY_143)[0])
@@ -123,37 +124,15 @@
             project: row.PROPERTY_141 ? Object.values(row.PROPERTY_141)[0] : row.NAME.split(' ')[0],
             text: row.PREVIEW_TEXT,
             user: row.PROPERTY_143 ? Object.values(row.PROPERTY_143)[0] : 0,
-            duration: 0,
-            git: [],
-            waka: []
+            duration: +Object.values(row.PROPERTY_179)[0],
+            git: []
           }
           let resultKey = data.text + data.project + data.user
-          if (result[resultKey]) data = result[resultKey]
-          data.git.push(data.lastDate = row.DATE_CREATE)
-
-          let addTime = timeAdd[data.user + data.project]
-          if (addTime) {
-            let max = this.readyDate(row.DATE_CREATE) - this.readyDate(row.ACTIVE_FROM)
-            if (max < addTime) {
-              data.duration += max
-              addTime = addTime - max
-            } else {
-              data.duration += addTime
-              addTime = 0
-            }
+          if (result[resultKey]) {
+            data = result[resultKey]
+            data.duration += +Object.values(row.PROPERTY_179)[0]
           }
-
-          this.waka.filter(row => skip.indexOf(row.ID) === -1 && row.NAME.toLocaleLowerCase().indexOf(data.project.toLocaleLowerCase()) > -1 && Object.values(row.PROPERTY_133)[0] === data.user && this.readyDate(row.ACTIVE_FROM) <= data.time).forEach(row => {
-            skip.push(row.ID)
-            data.waka.push(row.ACTIVE_FROM)
-            if (this.readyDate(row.ACTIVE_TO) > data.time) {
-              data.duration += this.readyDate(data.date) - this.readyDate(row.ACTIVE_FROM)
-              addTime = this.readyDate(row.ACTIVE_TO) - data.time
-            } else {
-              data.duration += row.PROPERTY_139 ? +Object.values(row.PROPERTY_139)[0] : 0
-            }
-          })
-          timeAdd[data.user + data.project] = addTime
+          data.git.push(data.lastDate = row.DATE_CREATE)
 
           if (this.readyDate(this.filter.DATE_FROM) <= data.time) {
             result[resultKey] = data
@@ -163,13 +142,12 @@
         if (this.filter.PROJECT) {
           result = Object.values(result).filter(row => row.project === this.filter.PROJECT)
         }
-//        console.log(result, this.waka.filter(row => skip.indexOf(row.ID) === -1).map(row => row.NAME))
 
         return result
       }
     },
     created () {
-      this.filter.DATE_FROM = [(new Date()).getFullYear(), ('0' + (new Date()).getMonth() + 1).substr(-2), '01'].join('-')
+      this.filter.DATE_FROM = sessionStorage.getItem('fromDate') || [(new Date()).getFullYear(), ('0' + ((new Date()).getMonth() + 1)).substr(-2), '01'].join('-')
       BX.get('user.get', {}).then(users => {
         users.forEach(row => {
           this.userList[row.ID] = row
