@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
 import BillList from '@/components/BillList'
 import ActList from '@/components/ActList'
 import ActEdit from '@/components/ActEdit'
@@ -13,8 +12,7 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld
+      redirect: '/acts'
     },
     {
       path: '/acts',

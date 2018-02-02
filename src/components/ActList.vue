@@ -1,61 +1,50 @@
 <template>
     <div class="acts">
-        <div class="grid-x">
-            <div class="medium-7 cell">
-                <div class="input-group">
-                    <label for="from" class="input-group-label">с</label>
-                    <input id="from" type="date" class="input-group-field" v-model="filter.DATE_FROM"
-                           @change="getActs()">
-
-                    <label for="to" class="input-group-label">до</label>
-                    <input id="to" type="date" class="input-group-field" v-model="filter.DATE_TO" @change="getActs()">
-                </div>
-            </div>
-
-            <div class="medium-5 cell" style="text-align: right">
-                <a href="/#/bills" class="button ">Акты по счетам</a>
-                <a href="/#/act" class="button">Добавить акт</a>
-            </div>
+        <div v-if="currentId">
+            <button @click="currentId=false">< back</button>
+            <act-show ref="act" :id="currentId"></act-show>
         </div>
+        <div v-else>
+            <date-select></date-select>
 
-        <table>
-            <thead>
-            <tr>
-                <th></th>
-                <th>Дата выставления</th>
-                <th>#</th>
-                <th>Сумма</th>
-                <th>Кому</th>
-                <th>От кого</th>
-                <th>Статус</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="row in acts" :class="{selected: select.indexOf(row.ID)+1}" @click="rowClick(row.ID)">
-                <td><label><input type="checkbox" v-model="select" :value="row.ID" @click.prevent></label></td>
-                <td>{{(new Date(row.DATE_ACTIVE_FROM)).toLocaleDateString()}}</td>
-                <td>{{row.NAME}}</td>
-                <td>{{row.PROPERTY_VALUES.price}}</td>
-                <td>
-                    <div class="company" v-if="value=companies[row.PROPERTY_VALUES.companyTo]">{{value}}</div>
-                </td>
-                <td>
-                    <div class="my-company" v-if="value=companies[row.PROPERTY_VALUES.companyFrom]">{{value}}</div>
-                </td>
-                <td>
-                    <span>{{getStatus(row)}}</span>
-                </td>
-                <td>
-                    <button type="button" @click.prevent="createPdf(row.ID)">pdf</button>
-                    <button type="button" @click.prevent="editAct(row.ID)">edit</button>
-                    <button type="button" @click.prevent="removeAct(row.ID)">delete</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-
-        <act-show v-show="1" ref="act" :id="currentId"></act-show>
+            <table>
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Дата выставления</th>
+                    <th>#</th>
+                    <th>Сумма</th>
+                    <th>Кому</th>
+                    <th>От кого</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="row in acts" :class="{selected: select.indexOf(row.ID)+1}" @click="rowClick(row.ID)">
+                    <td><label><input type="checkbox" v-model="select" :value="row.ID" @click.prevent></label></td>
+                    <td>{{(new Date(row.DATE_ACTIVE_FROM)).toLocaleDateString()}}</td>
+                    <td>{{row.NAME}}</td>
+                    <td>{{row.PROPERTY_VALUES.price}}</td>
+                    <td>
+                        <div class="company" v-if="value=companies[row.PROPERTY_VALUES.companyTo]">{{value}}</div>
+                    </td>
+                    <td>
+                        <div class="my-company" v-if="value=companies[row.PROPERTY_VALUES.companyFrom]">{{value}}</div>
+                    </td>
+                    <td>
+                        <span>{{getStatus(row)}}</span>
+                    </td>
+                    <td>
+                        <button type="button" @click.prevent="showAct(row.ID)">show</button>
+                        <button type="button" @click.prevent="createPdf(row.ID)">pdf</button>
+                        <button type="button" @click.prevent="editAct(row.ID)">edit</button>
+                        <button type="button" @click.prevent="removeAct(row.ID)">delete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </template>
 
@@ -63,9 +52,10 @@
   import BX from '../services/BXService'
   import html2pdf from 'html2pdf.js'
   import ActShow from '@/components/ActShow'
+  import DateSelect from '@/components/DateSelect'
 
   export default {
-    components: {ActShow},
+    components: {ActShow, DateSelect},
     name: 'ActList',
     data () {
       return {
@@ -81,17 +71,21 @@
       getStatus (row) {
         return this.statusMap[+row.PROPERTY_VALUES.status || 0]
       },
-      printAct (id) {
+      showAct (id) {
+        this.currentId = id
       },
       createPdf (id) {
         this.currentId = id
-        let element = document.getElementById('actDetail')
-        html2pdf(element, {
-          margin: 10,
-          filename: 'act_' + this.currentId + '.pdf',
-          image: {type: 'jpeg', quality: 0.98},
-          html2canvas: {dpi: 384, letterRendering: true}
-        })
+        setTimeout(_ => {
+          let element = document.getElementById('actDetail')
+          html2pdf(element, {
+            margin: 10,
+            filename: 'act_' + this.currentId + '.pdf',
+            image: {type: 'jpeg', quality: 0.98},
+            html2canvas: {dpi: 384, letterRendering: true}
+          })
+          this.currentId = false
+        }, 1000)
       },
       editAct (id) {
         location.href = '/#/act/' + id

@@ -1,12 +1,30 @@
 <template>
     <div id="app">
+        <!--<h1>Система статистики</h1>-->
+        <div class="float-right">
+            <button @click="refresh()" class="button hollow small">&#x21bb;</button>
+        </div>
+        <ul class="menu simple">
+            <li><a href="#/acts">Акты</a></li>
+            <li><a href="#/bills">Счета</a></li>
+            <li><a href="#/tasks">Задачи</a></li>
+            <li class="float-right"><a href="#/act">+акт</a></li>
+        </ul>
+        <div class="clearfix"></div>
+
         <router-view/>
     </div>
 </template>
 
 <script>
   export default {
-    name: 'app'
+    name: 'app',
+    methods: {
+      refresh () {
+        sessionStorage.clear()
+        location.reload()
+      }
+    }
   }
 </script>
 
@@ -21,6 +39,7 @@
     @include foundation-forms;
     @include foundation-float-classes;
     @include foundation-button;
+    @include foundation-menu;
 
     tbody tr {
         &.selected{

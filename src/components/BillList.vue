@@ -1,39 +1,15 @@
 <template>
     <div class="bills">
-        <div class="grid-x">
-            <div class="medium-7 cell">
-                <div class="input-group">
-                    <label for="from" class="input-group-label">с</label>
-                    <input id="from" type="date" class="input-group-field" v-model="filter.DATE_FROM"
-                           @change="getBills()">
-
-                    <span class="space"></span>
-
-                    <label for="to" class="input-group-label">до</label>
-                    <input id="to" type="date" class="input-group-field" v-model="filter.DATE_TO" @change="getBills()">
-
-                    <span class="space"></span>
-
-                    <label for="status" class="input-group-label">статус</label>
-                    <select id="status" v-model="filter.STATUS" size="1">
-                        <option value=""></option>
-                        <option v-for="(status, key) in statuses" :value="key">{{status}}</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="medium-5 cell" style="text-align: right">
-                <a href="/#/acts" class="button">акты</a>
-            </div>
-        </div>
+        <date-select></date-select>
 
         <table>
             <thead>
             <tr>
                 <th></th>
-                <th>Дата выставления</th>
                 <th>#</th>
                 <th>Заголовок</th>
+                <th>Дата выставления</th>
+                <th>Дата оплаты</th>
                 <th>Стоимость</th>
                 <th>Статус</th>
                 <th></th>
@@ -44,10 +20,11 @@
             <tbody>
             <tr v-for="row in bills" :class="{selected: select.indexOf(row.ID)+1}" @click="rowClick(row.ID)">
                 <td><label><input type="checkbox" v-model="select" :value="row.ID" @click.prevent></label></td>
-                <td>{{(new Date(row.DATE_BILL)).toLocaleDateString()}}</td>
                 <td><a :href="domain+'/crm/invoice/show/'+row.ID+'/'" @click.stop
                        target="_blank">{{row.ACCOUNT_NUMBER}}</a></td>
                 <td>{{row.ORDER_TOPIC}}</td>
+                <td>{{(new Date(row.DATE_BILL)).toLocaleDateString()}}</td>
+                <td>{{row.DATE_PAYED?(new Date(row.DATE_PAYED)).toLocaleDateString():''}}</td>
                 <td>{{row.PRICE}}</td>
                 <td>
                     <div class="status" v-if="value=statuses[row.STATUS_ID]">{{value}}</div>
@@ -78,9 +55,11 @@
 
 <script>
   import BX from '../services/BXService'
+  import DateSelect from '@/components/DateSelect'
 
   export default {
     name: 'BillList',
+    components: {DateSelect},
     data () {
       return {
         bills: [],
@@ -112,7 +91,7 @@
               let params = {
                 ENTITY: 'actList',
                 NAME: bill.ACCOUNT_NUMBER,
-                DATE_ACTIVE_FROM: bill.DATE_PAYED || bill.DATE_BILL,
+                DATE_ACTIVE_FROM: bill.DATE_PAYED > bill.DATE_BILL ? bill.DATE_PAYED : bill.DATE_BILL,
                 PREVIEW_TEXT: bill.COMMENTS,
                 PROPERTY_VALUES: {
                   bill: bill.ID,
@@ -156,16 +135,18 @@
       },
       getBills: function () {
         let filter = {'!%ACCOUNT_NUMBER': '#'}
+        filter['DATE_FROM'] = this.dateFrom
+        filter['DATE_TO'] = this.dateTo
         BX.get('crm.invoice.list', {filter: filter}).then(data => {
           this.updateData(data)
         })
       },
       updateData (data) {
+        console.log(data)
         this.bills = data
 
         BX.get('entity.item.get', {ENTITY: 'actList', PROPERTY_bill: this.bills.map(row => row.ID)}).then(data => {
           this.actExists = data.map(row => row.PROPERTY_VALUES.bill)
-          console.log(this.actExists)
           this.$forceUpdate()
         })
 
@@ -195,6 +176,9 @@
       }
     },
     computed: {
+      date () {
+        return this.$children[0]
+      },
       domain () {
         return 'http://' + BX.domain()
       }

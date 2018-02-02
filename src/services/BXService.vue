@@ -1,7 +1,7 @@
 <script>
   /* eslint-disable */
   export default {
-    cache: true,
+    cache: false,
     domain () {
       return BX24.getAuth().domain
     },
@@ -9,7 +9,7 @@
       const cacheId = method + '-' + JSON.stringify([params, next])
 
       return new Promise((resolve, reject) => {
-        if (0 && this.cache && sessionStorage.getItem(cacheId)) {
+        if (this.cache && sessionStorage.getItem(cacheId)) {
           resolve(JSON.parse(sessionStorage.getItem(cacheId)))
         } else {
           let data = []

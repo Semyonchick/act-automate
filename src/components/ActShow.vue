@@ -87,9 +87,10 @@
           get: 'Адрес',
           RQ_INN: 'ИНН',
           RQ_KPP: 'КПП',
-          bill: 'Расчетный счет',
-          bank: 'Банк',
-          bik: 'БИК'
+          RQ_ACC_NUM: 'Расчетный счет',
+          RQ_COR_ACC_NUM: 'Кор. счет',
+          RQ_BANK_NAME: 'Банк',
+          RQ_BIK: 'БИК'
         },
         requisites: {}
       }
@@ -110,13 +111,26 @@
         return parseFloat(price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1 ').replace('.', ',')
       },
       getCompanies (ids) {
-        return BX.get('crm.requisite.list', {
-          filter: {ENTITY_ID: ids, ENTITY_TYPE_ID: 4}
-        }).then(result => {
-          result.forEach(row => {
-            this.requisites[row.ENTITY_ID] = row
+        return new Promise(resolve => {
+          BX.get('crm.requisite.list', {
+            filter: {ENTITY_ID: ids, ENTITY_TYPE_ID: 4}
+          }).then(result => {
+            BX.get('crm.requisite.bankdetail.list', {
+              filter: {ENTITY_ID: result.map(row => row.ID)}
+            }).then(data => {
+              result.forEach(row => {
+                let rq = data.filter(rq => rq.ENTITY_ID === row.ID)[0]
+                for (let key in rq) {
+                  if (key.indexOf('RQ_') === 0) {
+                    row[key] = rq[key]
+                  }
+                }
+                this.requisites[row.ENTITY_ID] = row
+              })
+              console.log(this.requisites)
+              resolve(this.requisites)
+            })
           })
-          console.log(this.requisites)
         })
       }
     },
@@ -146,7 +160,6 @@
 
             this.getCompanies([data.PROPERTY_VALUES.companyTo, data.PROPERTY_VALUES.companyFrom]).then(_ => {
               this.act = data
-              this.$forceUpdate
             })
           })
         }
