@@ -97,7 +97,7 @@
         params.PROPERTY_VALUES.products = JSON.stringify(params.PROPERTY_VALUES.products)
         if (this.act.ID) {
           BX.get('entity.item.update', params).then(_ => {
-            location.href = '/#/acts'
+            location.href = '#/acts'
           })
         } else {
           BX.get('entity.item.add', params).then(_ => {

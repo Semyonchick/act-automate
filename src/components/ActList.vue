@@ -88,7 +88,7 @@
         }, 1000)
       },
       editAct (id) {
-        location.href = '/#/act/' + id
+        location.href = '#/act/' + id
       },
       removeAct (id) {
         if (confirm('Вы уверены что хотите удалить этот акт?')) {

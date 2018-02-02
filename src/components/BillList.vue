@@ -113,7 +113,7 @@
             })
 
             BX.batch(calls).then(_ => {
-              location.href = '/#/acts'
+              location.href = '#/acts'
             })
           })
         })
@@ -135,14 +135,15 @@
       },
       getBills: function () {
         let filter = {'!%ACCOUNT_NUMBER': '#'}
-        filter['DATE_FROM'] = this.dateFrom
-        filter['DATE_TO'] = this.dateTo
+        if (this.date) {
+          filter['>=DATE_INSERT'] = this.date.dateFrom
+          filter['<=DATE_INSERT'] = this.date.dateTo
+        }
         BX.get('crm.invoice.list', {filter: filter}).then(data => {
           this.updateData(data)
         })
       },
       updateData (data) {
-        console.log(data)
         this.bills = data
 
         BX.get('entity.item.get', {ENTITY: 'actList', PROPERTY_bill: this.bills.map(row => row.ID)}).then(data => {
@@ -184,7 +185,9 @@
       }
     },
     created: function () {
-      this.getBills()
+      this.$nextTick(_ => {
+        this.getBills()
+      })
 
       BX.get('crm.invoice.status.list', {select: ['STATUS_ID', 'NAME']}).then(data => {
         data.forEach(row => { this.statuses[row.STATUS_ID] = row.NAME })
