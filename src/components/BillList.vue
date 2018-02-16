@@ -2,7 +2,7 @@
     <div class="bills">
         <date-select></date-select>
 
-        <table>
+        <table v-if="getBills">
             <thead>
             <tr>
                 <th></th>
@@ -24,7 +24,7 @@
                        target="_blank">{{row.ACCOUNT_NUMBER}}</a></td>
                 <td>{{row.ORDER_TOPIC}}</td>
                 <td>{{(new Date(row.DATE_BILL)).toLocaleDateString()}}</td>
-                <td>{{row.DATE_PAYED?(new Date(row.DATE_PAYED)).toLocaleDateString():''}}</td>
+                <td>{{row.DATE_PAYED ? (new Date(row.DATE_PAYED)).toLocaleDateString() : ''}}</td>
                 <td>{{row.PRICE}}</td>
                 <td>
                     <div class="status" v-if="value=statuses[row.STATUS_ID]">{{value}}</div>
@@ -63,6 +63,7 @@
     data () {
       return {
         bills: [],
+        date: [],
         actExists: [],
         select: [],
         statuses: {},
@@ -132,62 +133,64 @@
         } else {
           this.select.push(id)
         }
-      },
-      getBills: function () {
-        let filter = {'!%ACCOUNT_NUMBER': '#'}
-        if (this.date) {
-          filter['>=DATE_INSERT'] = this.date.dateFrom
-          filter['<=DATE_INSERT'] = this.date.dateTo
-        }
-        BX.get('crm.invoice.list', {filter: filter}).then(data => {
-          this.updateData(data)
-        })
-      },
-      updateData (data) {
-        this.bills = data
-
-        BX.get('entity.item.get', {ENTITY: 'actList', PROPERTY_bill: this.bills.map(row => row.ID)}).then(data => {
-          this.actExists = data.map(row => row.PROPERTY_VALUES.bill)
-          this.$forceUpdate()
-        })
-
-        let contacts = [...new Set(data.filter(value => value.UF_CONTACT_ID).map(value => value.UF_CONTACT_ID))].filter(id => !this.contacts[id])
-        if (contacts.length) {
-          BX.get('crm.contact.list', {
-            filter: {ID: contacts},
-            select: ['ID', 'NAME', 'LAST_NAME']
-          }).then(data => {
-            data.forEach(row => { this.contacts[row.ID] = [row.LAST_NAME, row.NAME].join(' ').trim() })
-            this.$forceUpdate()
-          })
-        }
-
-        let companies = [...new Set(data.filter(value => value.UF_COMPANY_ID).map(value => value.UF_COMPANY_ID).concat(data.map(value => value.UF_MYCOMPANY_ID)))].filter(id => !this.companies[id])
-        if (companies.length) {
-          BX.get('crm.company.list', {
-            filter: {ID: companies},
-            select: ['ID', 'TITLE']
-          }).then(data => {
-            data.forEach(row => {
-              this.companies[row.ID] = row.TITLE
-            })
-            this.$forceUpdate()
-          })
-        }
+      }
+    },
+    watch: {
+      date () {
+        this.getBills
       }
     },
     computed: {
-      date () {
-        return this.$children[0]
+      getBills () {
+        return (new Promise((resolve) => {
+          let filter = {'!%ACCOUNT_NUMBER': '#'}
+          if (this.date) {
+            filter['>=DATE_INSERT'] = this.date.dateFrom
+            filter['<=DATE_INSERT'] = this.date.dateTo
+          }
+
+          BX.get('crm.invoice.list', {filter: filter}).then(bills => {
+            BX.get('entity.item.get', {ENTITY: 'actList', PROPERTY_bill: bills.map(row => row.ID)}).then(data => {
+              this.actExists = data.map(row => row.PROPERTY_VALUES.bill)
+              this.$forceUpdate()
+            })
+
+            let contacts = [...new Set(bills.filter(value => value.UF_CONTACT_ID).map(value => value.UF_CONTACT_ID))].filter(id => !this.contacts[id])
+            if (contacts.length) {
+              BX.get('crm.contact.list', {
+                filter: {ID: contacts},
+                select: ['ID', 'NAME', 'LAST_NAME']
+              }).then(data => {
+                data.forEach(row => { this.contacts[row.ID] = [row.LAST_NAME, row.NAME].join(' ').trim() })
+                this.$forceUpdate()
+              })
+            }
+
+            let companies = [...new Set(bills.filter(value => value.UF_COMPANY_ID).map(value => value.UF_COMPANY_ID).concat(bills.map(value => value.UF_MYCOMPANY_ID)))].filter(id => !this.companies[id])
+            if (companies.length) {
+              BX.get('crm.company.list', {
+                filter: {ID: companies},
+                select: ['ID', 'TITLE']
+              }).then(data => {
+                data.forEach(row => {
+                  this.companies[row.ID] = row.TITLE
+                })
+                this.$forceUpdate()
+              })
+            }
+
+            resolve(bills)
+          })
+        })).then(data => {
+          this.bills = data
+        })
       },
       domain () {
         return 'http://' + BX.domain()
       }
     },
-    created: function () {
-      this.$nextTick(_ => {
-        this.getBills()
-      })
+    mounted: function () {
+      this.date = this.$children[0]
 
       BX.get('crm.invoice.status.list', {select: ['STATUS_ID', 'NAME']}).then(data => {
         data.forEach(row => { this.statuses[row.STATUS_ID] = row.NAME })

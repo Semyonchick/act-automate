@@ -138,26 +138,30 @@
         }
       },
       install () {
-        this.remove()
+        if (confirm('Delete all?')) {
+          this.remove()
+        }
         BX.batch([
-          ['entity.add', {ENTITY: 'actList', NAME: 'Список актов'}],
+          ['entity.add', {ENTITY: 'actList', NAME: 'Список актов', ACCESS: {AU: 'W'}}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'bill', NAME: 'Счет', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'deal', NAME: 'Сделка', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'price', NAME: 'Сумма', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyTo', NAME: 'Заказчик', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'companyFrom', NAME: 'Исполнитель', TYPE: 'N'}],
           ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'products', NAME: 'Товары', TYPE: 'S'}],
-          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'status', NAME: 'Статус', TYPE: 'N'}]
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'status', NAME: 'Статус', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'sendDate', NAME: 'Дата отправки', TYPE: 'N'}],
+          ['entity.item.property.add', {ENTITY: 'actList', PROPERTY: 'backDate', NAME: 'Дата получения', TYPE: 'N'}]
         ]).then(_ => {
           this.getActs()
         })
       },
       remove () {
-        BX.get('entity.delete', {ENTITY: 'actList'})
+        return BX.get('entity.delete', {ENTITY: 'actList'})
       }
     },
     computed: {},
-    created () {
+    mounted () {
       BX.get('entity.get', {ENTITY: 'actList'}).then(_ => this.getActs()).catch(_ => this.install())
     }
   }
