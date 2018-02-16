@@ -40,6 +40,10 @@
             </tr>
             </tbody>
             <tfoot>
+            <tr v-if="nds">
+                <td colspan="4">НДС 18%:</td>
+                <td>{{getPriceFormat(nds)}}</td>
+            </tr>
             <tr>
                 <td colspan="4">Итого:</td>
                 <td>{{getPriceFormat(act.PROPERTY_VALUES.price)}}</td>
@@ -47,7 +51,7 @@
             </tfoot>
         </table>
 
-        <div style="margin: 5px 0 15px">Сумма прописью: {{textPrice}} 00 копеек. Без НДС.</div>
+        <div style="margin: 5px 0 15px">Сумма прописью: {{textPrice}} 00 копеек. <template v-if="nds">В том числе НДС 18% - {{getPriceFormat(nds)}}</template><template v-else>Без НДС</template>.</div>
 
         <div style="margin: 30px 0">Работы выполнены в полном объеме, в установленные сроки и с надлежащим качеством.
             Стороны претензий друг к другу не имеют.
@@ -105,7 +109,7 @@
         })
       },
       getName (data) {
-        return data.RQ_COMPANY_NAME || [data.PRESET_ID === '4' ? 'ИП' : '', data.RQ_LAST_NAME, data.RQ_FIRST_NAME, data.RQ_SECOND_NAME].filter(value => value).join(' ')
+        return data.RQ_COMPANY_NAME || data.RQ_COMPANY_FULL_NAME || data.UF_CRM_1515753918 || [data.PRESET_ID === '4' ? 'ИП' : '', data.RQ_LAST_NAME, data.RQ_FIRST_NAME, data.RQ_SECOND_NAME].filter(value => value).join(' ') || data.NAME
       },
       getPriceFormat (price) {
         return parseFloat(price).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1 ').replace('.', ',')
@@ -140,6 +144,11 @@
       },
       to () {
         return this.requisites[this.act.PROPERTY_VALUES.companyTo] || {}
+      },
+      nds () {
+        let productsSum = this.act.PROPERTY_VALUES.products.map(row => row.total).reduce((a, b) => a + b)
+        if (productsSum < this.act.PROPERTY_VALUES.price) return this.act.PROPERTY_VALUES.price - productsSum
+        return 0
       },
       textPrice () {
         let total = this.act.ID ? this.act.PROPERTY_VALUES.price : false
