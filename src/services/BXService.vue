@@ -18,7 +18,9 @@
               reject(request.error())
             } else {
               data = data.concat(request.answer.result)
-              if (request.answer.next && (!next || next(data))) request.next()
+              if (request.answer.next && (!next || next(data))){
+                setTimeout(_ => {request.next()}, 100)
+              }
               else {
                 if (this.cache && method.match(/\.(get|list)$/)) {
                   sessionStorage.setItem(cacheId, JSON.stringify(data))

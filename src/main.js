@@ -11,5 +11,16 @@ new Vue({
   el: '#app',
   router,
   template: '<App/>',
-  components: { App }
+  components: {App},
+  watch: {
+    $route (to, from) {
+      if (to.name) localStorage.setItem('navigate', to.name)
+    }
+  },
+  created () {
+    if (localStorage.getItem('navigate')) {
+      console.log(localStorage.getItem('navigate'))
+      this.$router.push({name: localStorage.getItem('navigate')})
+    }
+  }
 })

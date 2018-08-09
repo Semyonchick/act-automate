@@ -137,7 +137,6 @@
     },
     watch: {
       date () {
-        this.getBills
       }
     },
     computed: {

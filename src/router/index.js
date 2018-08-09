@@ -25,7 +25,7 @@ export default new Router({
     },
     {
       path: '/act',
-      name: 'ActEdit',
+      name: 'ActAdd',
       component: ActEdit
     },
     {
