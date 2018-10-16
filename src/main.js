@@ -6,6 +6,8 @@ import router from './router'
 
 Vue.config.productionTip = false
 
+// VueRangedatePicker.default.install(Vue)
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
